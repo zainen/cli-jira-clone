@@ -18,116 +18,60 @@ impl JiraDatabase {
     }
 
     pub fn create_epic(&self, epic: Epic) -> Result<u32> {
-        let db = self.database.read_db()?;
-        let mut epics = db.epics;
+        let mut db = self.database.read_db()?;
         let id = db.last_item_id + 1;
-        epics.insert(id, epic);
-        self.database.write_db(&DBState {
-            last_item_id: id,
-            epics,
-            stories: db.stories,
-        })?;
+        db.epics.insert(id, epic);
+        db.last_item_id = id;
+        self.database.write_db(&db)?;
         Ok(id)
     }
 
     pub fn create_story(&self, story: Story, epic_id: u32) -> Result<u32> {
-        let db = self.database.read_db()?;
-        let mut stories = db.stories;
-        let mut epics = db.epics;
-        match epics.get_mut(&epic_id) {
-            Some(found_epic) => {
-                let id = db.last_item_id + 1;
-                found_epic.stories.push(id);
-                stories.insert(id, story);
-                self.database.write_db(&DBState {
-                    last_item_id: id,
-                    epics,
-                    stories,
-                })?;
-                Ok(id)
-            }
-            None => Err(anyhow!("epic {} not found", epic_id)),
-        }
+        let mut db = self.database.read_db()?;
+        let epic = db.epics.get_mut(&epic_id).ok_or_else(|| anyhow!("epic {} not found", epic_id))?; 
+        let id = db.last_item_id + 1;
+        epic.stories.push(id);
+        db.stories.insert(id, story);
+        db.last_item_id = id;
+        self.database.write_db(&db)?;
+        Ok(id)
     }
 
     pub fn delete_epic(&self, epic_id: u32) -> Result<()> {
-        let db = self.database.read_db()?;
-        let mut epics = db.epics;
-        let mut stories = db.stories;
-        let target = epics.get(&epic_id);
-        match target {
-            Some(epic) => {
-                for story_id in epic.stories.iter() {
-                    stories.remove(story_id);
-                }
-                epics.remove(&epic_id);
-                self.database.write_db(&DBState {
-                    last_item_id: db.last_item_id,
-                    epics,
-                    stories,
-                })?;
-                Ok(())
-            }
-            None => Err(anyhow!("epic {} not found", epic_id)),
+        let mut db = self.database.read_db()?;
+
+        let epic = db.epics.get_mut(&epic_id).ok_or_else(|| anyhow!("epic {} not found", epic_id))?;
+        for story_id in epic.stories.iter() {
+            db.stories.remove(story_id);
         }
+        db.epics.remove(&epic_id);
+        self.database.write_db(&db)?;
+        Ok(())
     }
 
     pub fn delete_story(&self, epic_id: u32, story_id: u32) -> Result<()> {
-        let db = self.database.read_db()?;
-        let mut stories = db.stories;
-        let mut epics = db.epics;
-        let target_epic = epics.get_mut(&epic_id);
-        if target_epic.is_none() {
-            return Err(anyhow!("epic {} not found", epic_id));
-        }
-        let safe_target_epic = target_epic.unwrap();
-        let story_idx = safe_target_epic.stories.iter().position(|x| x == &story_id);
-        if story_idx.is_none() {
-            return Err(anyhow!("story id {} not found", story_id));
-        }
-        safe_target_epic.stories.remove(story_idx.unwrap());
-        stories.remove(&story_id);
-        self.database.write_db(&DBState {
-            last_item_id: db.last_item_id,
-            epics,
-            stories,
-        })
+        let mut db = self.database.read_db()?;
+        let target_epic = db.epics.get_mut(&epic_id).ok_or_else(|| anyhow!("epic {} not found", epic_id))?;
+        let story_idx = target_epic.stories.iter().position(|x| x == &story_id).ok_or_else(|| anyhow!("story id {} not found", story_id))?;
+        target_epic.stories.remove(story_idx);
+        db.stories.remove(&story_id);
+        self.database.write_db(&db)
     }
 
     pub fn update_epic_status(&self, epic_id: u32, status: Status) -> Result<()> {
-        let db = self.database.read_db()?;
-        let mut epics = db.epics;
-        let target = epics.get_mut(&epic_id);
-        match target {
-            Some(epic) => {
-                epic.status = status;
-                self.database.write_db(&DBState {
-                    last_item_id: db.last_item_id,
-                    epics,
-                    stories: db.stories,
-                })?;
-                Ok(())
-            }
-            None => Err(anyhow!("epic {} not found", epic_id)),
-        }
+        let mut db = self.database.read_db()?;
+        let epic = db.epics.get_mut(&epic_id).ok_or_else(|| anyhow!("epic {} not found", epic_id))?;
+        epic.status = status;
+        self.database.write_db(&db)?;
+        Ok(())
     }
 
     pub fn update_story_status(&self, story_id: u32, status: Status) -> Result<()> {
-        let db = self.database.read_db()?;
-        let mut stories = db.stories;
-        let target = stories.get_mut(&story_id);
-        match target {
-            Some(story) => {
-                story.status = status;
-                self.database.write_db(&DBState {
-                    last_item_id: db.last_item_id,
-                    epics: db.epics,
-                    stories,
-                })?;
-                Ok(())
-            }
-            None => Err(anyhow!("story {} not found", story_id)),
-        }
+        let mut db = self.database.read_db()?;
+        let story = db.stories.get_mut(&story_id).ok_or_else(|| anyhow!("story {} not found", story_id))?;
+        story.status = status;
+        self.database.write_db(&db)?;
+        Ok(())
     }
 }
 
