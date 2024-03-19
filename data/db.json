@@ -1,1 +1,26 @@
-{"last_item_id":11,"epics":{"7":{"name":"Something","description":"New","status":"Open","stories":[11]},"8":{"name":"my new epic","description":"Something Awesome","status":"InProgress","stories":[]},"1":{"name":"Epic - Project 1","description":"This is Project 1 for the Bootcamp","status":"Open","stories":[2,3,9,10]}},"stories":{"10":{"name":"something","description":"something","status":"InProgress"},"11":{"name":"something","description":"seomthing","status":"Closed"},"3":{"name":"Story - Project 1 README","description":"Please create README file for Project 1","status":"InProgress"},"2":{"name":"Story - Project 1 Solution","description":"Please provide full implement for Project 1","status":"Resolved"},"9":{"name":"Story - Something to do","description":"Something to be done","status":"InProgress"}}}
+{
+  "last_item_id": 3,
+  "epics": {
+    "1": {
+      "name": "Epic - Project 1",
+      "description": "This is Project 1 for the Bootcamp",
+      "status": "InProgress",
+      "stories": [
+        2,
+        3
+      ]
+    }
+  },
+  "stories": {
+    "2": {
+      "name": "Story - Project 1 Solution",
+      "description": "Please provide full implement for Project 1",
+      "status": "Closed"
+    },
+    "3": {
+      "name": "Story - Project 1 README",
+      "description": "Please create README file for Project 1",
+      "status": "InProgress"
+    }
+  }
+}
