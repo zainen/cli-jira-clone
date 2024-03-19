@@ -29,7 +29,7 @@ impl Display for Status {
         match self {
             Status::Open => write!(f, "Open"),
             Status::InProgress => write!(f, "In Progress"),
-            Status::Resolved => write!(f, "Complete"),
+            Status::Resolved => write!(f, "Resolved"),
             Status::Closed => write!(f, "Closed"),
         }
     }
