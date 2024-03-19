@@ -20,13 +20,18 @@ pub enum Action {
 pub enum Status {
     Open,
     InProgress,
-    Complete,
+    Resolved,
     Closed,
 }
 
 impl Display for Status {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        todo!()
+        match self {
+            Status::Open => write!(f, "Open"),
+            Status::InProgress => write!(f, "In Progress"),
+            Status::Resolved => write!(f, "Complete"),
+            Status::Closed => write!(f, "Closed"),
+        }
     }
 }
 

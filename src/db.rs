@@ -1,9 +1,9 @@
-use crate::models::{DBState, Epic, Status, Story};
 use anyhow::{anyhow, Result};
-use serde_json;
+
+use crate::models::{DBState, Epic, Status, Story};
 
 pub struct JiraDatabase {
-    database: Box<dyn Database>,
+    pub database: Box<dyn Database>,
 }
 
 impl JiraDatabase {
@@ -28,7 +28,10 @@ impl JiraDatabase {
 
     pub fn create_story(&self, story: Story, epic_id: u32) -> Result<u32> {
         let mut db = self.database.read_db()?;
-        let epic = db.epics.get_mut(&epic_id).ok_or_else(|| anyhow!("epic {} not found", epic_id))?; 
+        let epic = db
+            .epics
+            .get_mut(&epic_id)
+            .ok_or_else(|| anyhow!("epic {} not found", epic_id))?;
         let id = db.last_item_id + 1;
         epic.stories.push(id);
         db.stories.insert(id, story);
@@ -40,7 +43,10 @@ impl JiraDatabase {
     pub fn delete_epic(&self, epic_id: u32) -> Result<()> {
         let mut db = self.database.read_db()?;
 
-        let epic = db.epics.get_mut(&epic_id).ok_or_else(|| anyhow!("epic {} not found", epic_id))?;
+        let epic = db
+            .epics
+            .get_mut(&epic_id)
+            .ok_or_else(|| anyhow!("epic {} not found", epic_id))?;
         for story_id in epic.stories.iter() {
             db.stories.remove(story_id);
         }
@@ -51,8 +57,15 @@ impl JiraDatabase {
 
     pub fn delete_story(&self, epic_id: u32, story_id: u32) -> Result<()> {
         let mut db = self.database.read_db()?;
-        let target_epic = db.epics.get_mut(&epic_id).ok_or_else(|| anyhow!("epic {} not found", epic_id))?;
-        let story_idx = target_epic.stories.iter().position(|x| x == &story_id).ok_or_else(|| anyhow!("story id {} not found", story_id))?;
+        let target_epic = db
+            .epics
+            .get_mut(&epic_id)
+            .ok_or_else(|| anyhow!("epic {} not found", epic_id))?;
+        let story_idx = target_epic
+            .stories
+            .iter()
+            .position(|x| x == &story_id)
+            .ok_or_else(|| anyhow!("story id {} not found", story_id))?;
         target_epic.stories.remove(story_idx);
         db.stories.remove(&story_id);
         self.database.write_db(&db)
@@ -60,7 +73,10 @@ impl JiraDatabase {
 
     pub fn update_epic_status(&self, epic_id: u32, status: Status) -> Result<()> {
         let mut db = self.database.read_db()?;
-        let epic = db.epics.get_mut(&epic_id).ok_or_else(|| anyhow!("epic {} not found", epic_id))?;
+        let epic = db
+            .epics
+            .get_mut(&epic_id)
+            .ok_or_else(|| anyhow!("epic {} not found", epic_id))?;
         epic.status = status;
         self.database.write_db(&db)?;
         Ok(())
@@ -68,14 +84,17 @@ impl JiraDatabase {
 
     pub fn update_story_status(&self, story_id: u32, status: Status) -> Result<()> {
         let mut db = self.database.read_db()?;
-        let story = db.stories.get_mut(&story_id).ok_or_else(|| anyhow!("story {} not found", story_id))?;
+        let story = db
+            .stories
+            .get_mut(&story_id)
+            .ok_or_else(|| anyhow!("story {} not found", story_id))?;
         story.status = status;
         self.database.write_db(&db)?;
         Ok(())
     }
 }
 
-trait Database {
+pub trait Database {
     fn read_db(&self) -> Result<DBState>;
     fn write_db(&self, db_state: &DBState) -> Result<()>;
 }
