@@ -47,13 +47,8 @@ impl Page for HomePage {
             "c" => Ok(Some(Action::CreateEpic)),
             _ => match input.parse::<u32>() {
                 Ok(id) => match self.db.database.read_db()?.epics.get(&id) {
-                    Some(_) => {
-                        println!("PARSED");
-                        Ok(Some(Action::NavigateToEpicDetail { epic_id: id }))
-                    },
-                    None => {
-                        Ok(None)
-                    },
+                    Some(_) => Ok(Some(Action::NavigateToEpicDetail { epic_id: id })),
+                    None => Ok(None)
                 },
                 Err(_) => Ok(None),
             },

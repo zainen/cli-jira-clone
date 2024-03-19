@@ -35,7 +35,6 @@ fn create_epic_prompt() -> Epic {
 fn create_story_prompt() -> Story {
     println!("Story Name:");
     let story_name = get_user_input();
-    println!("{story_name}");
     println!("Story Description");
     let story_description = get_user_input();
     println!("{story_description}");
