@@ -1,4 +1,4 @@
-use std::{fmt::Debug, rc::Rc};
+use std::{any::Any, rc::Rc};
 
 use anyhow::anyhow;
 use anyhow::Result;
@@ -13,6 +13,7 @@ use page_helpers::*;
 pub trait Page {
     fn draw_page(&self) -> Result<()>;
     fn handle_input(&self, input: &str) -> Result<Option<Action>>;
+    fn as_any(&self) -> &dyn Any;
 }
 
 pub struct HomePage {
@@ -25,18 +26,18 @@ impl Page for HomePage {
 
         self.db.read_db()?.epics.iter().for_each(|(id, epic)| {
             println!(
-                "{}|{}|{}",
-                get_column_string(format!("{id}").as_str(), 12),
-                get_column_string(&epic.name, 34),
-                get_column_string(epic.status.to_string().as_str(), 18)
+                "{} | {} | {}",
+                get_column_string(format!("{id}").as_str(), 11),
+                get_column_string(&epic.name, 32),
+                get_column_string(epic.status.to_string().as_str(), 17)
             );
         });
-
+        
         println!();
         println!();
-
+        
         println!("[q] quit | [c] create epic | [:id:] navigate to epic");
-
+        
         Ok(())
     }
 
@@ -46,12 +47,20 @@ impl Page for HomePage {
             "c" => Ok(Some(Action::CreateEpic)),
             _ => match input.parse::<u32>() {
                 Ok(id) => match self.db.database.read_db()?.epics.get(&id) {
-                    Some(_) => Ok(Some(Action::NavigateToEpicDetail { epic_id: id })),
-                    None => Ok(None),
+                    Some(_) => {
+                        println!("PARSED");
+                        Ok(Some(Action::NavigateToEpicDetail { epic_id: id }))
+                    },
+                    None => {
+                        Ok(None)
+                    },
                 },
                 Err(_) => Ok(None),
             },
         }
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }
 
@@ -73,11 +82,11 @@ impl Page for EpicDetail {
 
         // TODO: print out epic details using get_column_string()
         println!(
-            "{}|{}|{}|{}",
-            get_column_string(&self.epic_id.to_string(), 6),
-            get_column_string(&epic.name, 14),
-            get_column_string(&epic.description, 29),
-            get_column_string(&epic.status.to_string(), 14)
+            "{} | {} | {} | {}",
+            get_column_string(&self.epic_id.to_string(), 5),
+            get_column_string(&epic.name, 12),
+            get_column_string(&epic.description, 27),
+            get_column_string(&epic.status.to_string(), 13)
         );
 
         println!();
@@ -88,14 +97,17 @@ impl Page for EpicDetail {
         let stories = &db_state.stories;
 
         // TODO: print out stories using get_column_string(). also make sure the stories are sorted by id
-        stories.iter().for_each(|(id, story)| {
-            println!(
-                "{}|{}|{}",
-                get_column_string(&id.to_string(), 12),
-                get_column_string(&story.name, 34),
-                get_column_string(&story.status.to_string(), 18)
-            );
-        });
+        for (id, story) in stories.iter() {
+            if epic.stories.contains(&id) {
+
+                println!(
+                    "{} | {} | {}",
+                    get_column_string(&id.to_string(), 11),
+                    get_column_string(&story.name, 32),
+                    get_column_string(&story.status.to_string(), 17)
+                );
+            }
+        }
 
         println!();
         println!();
@@ -109,9 +121,9 @@ impl Page for EpicDetail {
         // TODO figure out epic_id
         match input {
             "p" => Ok(Some(Action::NavigateToPreviousPage)),
-            "u" => Ok(Some(Action::UpdateEpicStatus { epic_id: 1 })),
-            "d" => Ok(Some(Action::DeleteEpic { epic_id: 1 })),
-            "c" => Ok(Some(Action::CreateStory { epic_id: 1 })),
+            "u" => Ok(Some(Action::UpdateEpicStatus { epic_id: self.epic_id })),
+            "d" => Ok(Some(Action::DeleteEpic { epic_id: self.epic_id })),
+            "c" => Ok(Some(Action::CreateStory { epic_id: self.epic_id })),
             _ => match input.parse::<u32>() {
                 Ok(id) => match self.db.database.read_db()?.stories.get(&id) {
                     Some(_) => Ok(Some(Action::NavigateToStoryDetail {
@@ -123,6 +135,10 @@ impl Page for EpicDetail {
                 Err(_) => Ok(None),
             },
         }
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }
 
@@ -145,11 +161,11 @@ impl Page for StoryDetail {
 
         // TODO: print out story details using get_column_string()
         println!(
-            "{}|{}|{}|{}",
-            get_column_string(&self.story_id.to_string(), 6),
-            get_column_string(&story.name, 14),
-            get_column_string(&story.description, 29),
-            get_column_string(&story.status.to_string(), 14)
+            "{} | {} | {} | {}",
+            get_column_string(&self.story_id.to_string(), 5),
+            get_column_string(&story.name, 12),
+            get_column_string(&story.description, 27),
+            get_column_string(&story.status.to_string(), 13)
         );
 
         println!();
@@ -164,13 +180,17 @@ impl Page for StoryDetail {
         // TODO figure out epic_id and story_id
         match input {
             "p" => Ok(Some(Action::NavigateToPreviousPage)),
-            "u" => Ok(Some(Action::UpdateStoryStatus { story_id: 2 })),
+            "u" => Ok(Some(Action::UpdateStoryStatus { story_id: self.story_id })),
             "d" => Ok(Some(Action::DeleteStory {
-                epic_id: 1,
-                story_id: 2,
+                epic_id: self.epic_id,
+                story_id: self.story_id,
             })),
             _ => Ok(None),
         }
+    }
+    
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }
 

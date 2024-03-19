@@ -26,7 +26,7 @@ impl Prompts {
 fn create_epic_prompt() -> Epic {
     println!("Epic Name:");
     let epic_name = get_user_input();
-    println!("{}", epic_name.to_string());
+    println!("Epic Description");
     let epic_description = get_user_input();
     println!("{}", epic_description.to_string());
     Epic::new(epic_name, epic_description)
@@ -35,9 +35,10 @@ fn create_epic_prompt() -> Epic {
 fn create_story_prompt() -> Story {
     println!("Story Name:");
     let story_name = get_user_input();
-    println!("{}", story_name.to_string());
+    println!("{story_name}");
+    println!("Story Description");
     let story_description = get_user_input();
-    println!("{}", story_description.to_string());
+    println!("{story_description}");
     Story::new(story_name, story_description)
 }
 
