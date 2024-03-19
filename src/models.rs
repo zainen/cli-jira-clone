@@ -48,7 +48,7 @@ impl Epic {
         Epic {
             name: name,
             description: description,
-            status: Status::InProgress,
+            status: Status::Open,
             stories: vec![],
         }
     }
@@ -66,7 +66,7 @@ impl Story {
         Story {
             name: name,
             description: description,
-            status: Status::InProgress,
+            status: Status::Open,
         }
     }
 }
